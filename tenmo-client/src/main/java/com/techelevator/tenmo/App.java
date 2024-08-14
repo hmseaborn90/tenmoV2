@@ -1,18 +1,32 @@
 package com.techelevator.tenmo;
 
 import com.techelevator.tenmo.model.AuthenticatedUser;
+import com.techelevator.tenmo.model.User;
 import com.techelevator.tenmo.model.UserCredentials;
+import com.techelevator.tenmo.services.AccountService;
 import com.techelevator.tenmo.services.AuthenticationService;
 import com.techelevator.tenmo.services.ConsoleService;
+import com.techelevator.tenmo.services.TransferService;
+import com.techelevator.util.BasicLogger;
+
+import java.text.NumberFormat;
+
+import static com.techelevator.util.BasicLogger.log;
 
 public class App {
 
     private static final String API_BASE_URL = "http://localhost:8080/";
 
     private final ConsoleService consoleService = new ConsoleService();
+    private final AccountService accountService = new AccountService();
+    private final TransferService transferService = new TransferService();
     private final AuthenticationService authenticationService = new AuthenticationService(API_BASE_URL);
 
     private AuthenticatedUser currentUser;
+
+    private NumberFormat currency = NumberFormat.getCurrencyInstance();
+
+
 
     public static void main(String[] args) {
         App app = new App();
@@ -55,8 +69,12 @@ public class App {
     private void handleLogin() {
         UserCredentials credentials = consoleService.promptForCredentials();
         currentUser = authenticationService.login(credentials);
+        accountService.setAuthToken(currentUser);
+        transferService.setAuthToken(currentUser);
+        BasicLogger.log("User logged in");
         if (currentUser == null) {
             consoleService.printErrorMessage();
+
         }
     }
 
@@ -85,7 +103,8 @@ public class App {
     }
 
 	private void viewCurrentBalance() {
-		// TODO Auto-generated method stub
+        BasicLogger.log(currentUser.getUser().getUsername() + "Checked their balance" + "Balance: " + accountService.getBalance());
+        System.out.println("Your current account balance is: " + currency.format(accountService.getBalance()));
 		
 	}
 
@@ -100,8 +119,12 @@ public class App {
 	}
 
 	private void sendBucks() {
-		// TODO Auto-generated method stub
-		
+        User[] users = accountService.getUsers();
+        consoleService.printUsers(users);
+        String userId = consoleService.promptForString("Select user to send Bucks to");
+        int amount = consoleService.promptForInt("Insert amount to send");
+        System.out.println(userId + " " + amount);
+        // TODO Auto-generated method stub
 	}
 
 	private void requestBucks() {
