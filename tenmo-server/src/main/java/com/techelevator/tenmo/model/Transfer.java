@@ -11,6 +11,9 @@ public class Transfer {
     private int account_to_id;
     private BigDecimal amount;
 
+    public Transfer() {
+    }
+
     public Transfer(int transferId, int transfer_type_id, int transfer_status_id, int account_from_id, int account_to_id, BigDecimal amount) {
         this.transferId = transferId;
         this.transfer_type_id = transfer_type_id;

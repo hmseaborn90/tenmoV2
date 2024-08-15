@@ -1,6 +1,7 @@
 package com.techelevator.tenmo.dao;
 
 import com.techelevator.tenmo.exception.DaoException;
+import com.techelevator.tenmo.model.Transfer;
 import com.techelevator.tenmo.model.TransferDetailsDto;
 import com.techelevator.tenmo.model.TransferDto;
 import com.techelevator.tenmo.model.TransferPendingDto;
@@ -218,6 +219,25 @@ public class JdbcTransferDao implements TransferDao {
         } catch (DataIntegrityViolationException e) {
             throw new DaoException("Data integrity violation", e);
         }
+    }
+
+    public Transfer getTransferById(int transferId){
+        Transfer transfer = new Transfer();
+        String sql = "SELECT * FROM transfer where transfer_id = ?";
+        try {
+            SqlRowSet result = jdbcTemplate.queryForRowSet(sql, transferId);
+            if (result.next()) {
+                transfer.setTransferId(result.getInt("transfer_id"));
+                transfer.setTransfer_type_id(result.getInt("transfer_type_id"));
+                transfer.setTransfer_status_id(result.getInt("transfer_status_id"));
+                transfer.setAccount_from_id(result.getInt("account_from"));
+                transfer.setAccount_to_id(result.getInt("account_to"));
+                transfer.setAmount(result.getBigDecimal("amount"));
+            }
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DaoException("Unable to connect to server or database", e);
+        }
+        return transfer;
     }
 
 

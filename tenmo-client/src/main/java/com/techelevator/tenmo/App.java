@@ -101,7 +101,7 @@ public class App {
                     requestBucks();
                     break;
                 case 0:
-                    System.out.println("Exiting the application. Goodbye!");
+                    System.out.println("Thank you for using Tenmo. Goodbye! \uD83D\uDC4B ");
                     System.exit(0);
                     break;
                 default:

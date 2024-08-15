@@ -17,4 +17,6 @@ public interface TransferDao {
     void handleTransferRequest(int transferId, boolean approve, int userId);
 
     void sendTeBucks(int fromUserId, int toUserId, BigDecimal amount);
+
+    Transfer getTransferById(int transferId);
 }

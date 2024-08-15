@@ -81,6 +81,18 @@ public class TransferController {
         int userId = user.getId();
 
         try {
+
+            Transfer transfer = transferDao.getTransferById(transferId);
+            if (transfer == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Transfer not found.");
+            }
+
+
+            if (accountDao.getBalance(user.getUsername()).compareTo(transfer.getAmount()) >= 0) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Insufficient balance to perform request.");
+            }
+
+
             transferDao.handleTransferRequest(transferId, true, userId);
             return ResponseEntity.ok("Transfer request approved.");
         } catch (DaoException e) {

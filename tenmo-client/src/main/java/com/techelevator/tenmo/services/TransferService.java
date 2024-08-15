@@ -116,6 +116,7 @@ public class TransferService {
                     restTemplate.exchange(API_BASE_URL + "/" + trasferId + "/approve", HttpMethod.PUT, makeAuthEntity(), String.class);
             if (response.getStatusCode().is2xxSuccessful()) {
                 responseMessage = response.getBody();
+
             } else {
                 System.out.println("Error: " + response.getStatusCode() + " - " + response.getBody());
             }
