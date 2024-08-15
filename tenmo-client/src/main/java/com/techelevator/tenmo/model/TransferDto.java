@@ -11,8 +11,8 @@ public class TransferDto {
     public TransferDto(){
 
     }
-    public TransferDto(int transferId, String accountFrom, String accountTo, BigDecimal amount) {
-        this.transferId = transferId;
+    public TransferDto(int tranferId, String accountFrom, String accountTo, BigDecimal amount) {
+        this.transferId = tranferId;
         this.accountFrom = accountFrom;
         this.accountTo = accountTo;
         this.amount = amount;

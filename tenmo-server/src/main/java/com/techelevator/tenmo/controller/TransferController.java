@@ -38,10 +38,13 @@ public class TransferController {
     }
 
     @GetMapping("/pending")
-    public List<TransferPendingDto> getPending(Principal principal){
-       User user = userDao.getUserByUsername(principal.getName());
-       int accountTo = accountDao.getAccountByUserId(user.getId());
-       return transferDao.getPendingTransfers(accountTo);
+    public List<TransferPendingDto> getPending(Principal principal) {
+        User user = userDao.getUserByUsername(principal.getName());
+        int accountTo = accountDao.getAccountByUserId(user.getId());
+
+        List<TransferPendingDto> pendingTransfers = transferDao.getPendingTransfers(accountTo);
+
+        return pendingTransfers;
     }
 
     @GetMapping(path = "/{id}")
@@ -51,18 +54,23 @@ public class TransferController {
 
 
     @PostMapping("/send")
-    public ResponseEntity<String> sendTeBucks(Principal principal, @RequestBody int toUserId, BigDecimal amount){
+    @ResponseStatus(HttpStatus.CREATED)
+    public ResponseEntity<String> sendTeBucks(Principal principal, @RequestBody TransferRequestDto transferRequestDto){
         User user = userDao.getUserByUsername(principal.getName());
-
-       transferDao.sendTeBucks(user.getId(), toUserId, amount);
-        return ResponseEntity.ok("Transfer request approved.");
+    try{
+       transferDao.sendTeBucks(user.getId(), transferRequestDto.getUserTo(), transferRequestDto.getAmount());
+        return ResponseEntity.status(201).body("Transfer approved");
+    } catch (DaoException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
+}
     @PostMapping("/request")
-    public TransferDetailsDto postTransferRequest(Principal principal, @RequestBody TransferRequestDto transferRequestDto){
+    public ResponseEntity<String> postTransferRequest(Principal principal, @RequestBody TransferRequestDto transferRequestDto){
         User user = userDao.getUserByUsername(principal.getName());
         int accountFrom = accountDao.getAccountByUserId(user.getId());
         int accountTo = accountDao.getAccountByUserId(transferRequestDto.getUserTo());
-       return transferDao.sendRequest(accountFrom, accountTo, transferRequestDto.getAmount());
+       transferDao.sendRequest(accountFrom, accountTo, transferRequestDto.getAmount());
+       return ResponseEntity.status(201).body("Transfer request sent to user: " + transferRequestDto.getUserTo());
 
     }
     @PutMapping("/{transferId}/approve")

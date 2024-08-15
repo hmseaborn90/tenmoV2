@@ -111,39 +111,48 @@ public class JdbcTransferDao implements TransferDao {
     }
 
     public void sendTeBucks(int fromUserId, int toUserId, BigDecimal amount) {
-        // SQL Queries
+
         String getAccountIdSql = "SELECT account_id FROM account WHERE user_id = ?";
-        String insertTransferSql = "INSERT INTO transfer (account_from, account_to, amount, transfer_status_id) VALUES (?, ?, ?, ?)";
+        String insertTransferSql = "INSERT INTO transfer (transfer_type_id, transfer_status_id,account_from, account_to, amount) VALUES (?, ?, ?, ?, ?)";
         String updateAccountSql = "UPDATE account SET balance = balance + ? WHERE account_id = ?";
         String checkBalanceSql = "SELECT balance FROM account WHERE account_id = ?";
 
+        if (fromUserId == toUserId) {
+            throw new DaoException("Cannot send money to yourself.");
+        }
         try {
-
+            int fromAccountId;
             SqlRowSet fromAccountResult = jdbcTemplate.queryForRowSet(getAccountIdSql, fromUserId);
-            if (!fromAccountResult.next()) {
+            if (fromAccountResult.next()) {
+                fromAccountId = fromAccountResult.getInt("account_id");
+
+            } else {
                 throw new DaoException("Sender account not found.");
             }
-            int fromAccountId = fromAccountResult.getInt("account_id");
 
+
+            int toAccountId;
             SqlRowSet toAccountResult = jdbcTemplate.queryForRowSet(getAccountIdSql, toUserId);
-            if (!toAccountResult.next()) {
+            if (toAccountResult.next()) {
+                toAccountId = toAccountResult.getInt("account_id");
+            } else {
                 throw new DaoException("Recipient account not found.");
             }
-            int toAccountId = toAccountResult.getInt("account_id");
-
-
+            BigDecimal currentBalance;
             SqlRowSet balanceResult = jdbcTemplate.queryForRowSet(checkBalanceSql, fromAccountId);
-            if (!balanceResult.next()) {
+            if (balanceResult.next()) {
+                currentBalance = balanceResult.getBigDecimal("balance");
+            }else{
                 throw new DaoException("Sender's balance not found.");
             }
-            BigDecimal currentBalance = balanceResult.getBigDecimal("balance");
+
 
             if (currentBalance.compareTo(amount) < 0) {
                 throw new DaoException("Insufficient balance to create the transfer.");
             }
 
-            // Create a new transfer record (approved by default)
-            jdbcTemplate.update(insertTransferSql, fromAccountId, toAccountId, amount, 2);
+            // Create a new transfer record approved and send type by default
+            jdbcTemplate.update(insertTransferSql,2, 2, fromAccountId, toAccountId, amount);
 
             // Update the balances of both accounts
             jdbcTemplate.update(updateAccountSql, amount.negate(), fromAccountId);
@@ -152,7 +161,7 @@ public class JdbcTransferDao implements TransferDao {
         } catch (CannotGetJdbcConnectionException e) {
             throw new DaoException("Unable to connect to server or database", e);
         } catch (DataIntegrityViolationException e) {
-            throw new DaoException("Data integrity violation", e);
+            throw new DaoException("Data integrity violation: " +  e.getMessage());
         }
     }
 
@@ -215,7 +224,7 @@ public class JdbcTransferDao implements TransferDao {
     private TransferDto mapRowToTransfer(SqlRowSet rs) {
         TransferDto transfer = new TransferDto();
 
-        transfer.setTranferId(rs.getInt("transfer_id"));
+        transfer.setTransferId(rs.getInt("transfer_id"));
         transfer.setAccountFrom(rs.getString("account_from"));
         transfer.setAccountTo(rs.getString("account_to"));
         transfer.setAmount(rs.getBigDecimal("amount"));
